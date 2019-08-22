@@ -1,0 +1,209 @@
+Easier to start
+min amt of manual config
+- peform auto config based on props files and JAR classpath
+helps resolve dependency conflicts (maven or gradle)
+provide an embedded HTTP server = quick start
+- tomcat, jetty, undertow
+
+Spring Initializr -- http://start.spring.io
+	quick start spring project
+	select dependencies
+	create maven/gradle
+	import the project to IDE
+
+spring boot embedded server
+	not need to install a server separately
+		JAR file includes your application code AND includes the server
+			self-contained -- nothing to install
+
+Running SB apps
+	can be run stand-alone -- includes server
+	can be run from CLI, or IDE
+		java -jar mycoolapp.jar
+
+Deploying SB apps
+	can be deployed in traditional way
+	deploy WAR frile to ext server
+
+
+508
+Spring Boot initialr
+	
+	Bootstrap the Spring Boot app
+		SpringApplication.run(MycoolApplication.class, args)
+
+	'Run As' > 'Java Application'
+
+
+509 - REST API controler w/ spring boot
+	@RestController
+	@GetMapping("/")
+
+
+510 - explorin the SB project structure
+	mvnw - maven wrapper
+		don't need maven in your classpath... will download if needed
+			execute via ex.
+				-mvnw clean install
+		you can delete or ignore if maven installed locally
+
+	pom
+		spring-boot-starter-web
+			contains spring-web, spring-webmvc, hibernate-validator, tomcat, json
+		spring-boot-maven-plugin
+			used to package (as war or jar) and run
+				mvnw package (or mvn package)
+				mvnw spring-boot:run (or mvn spring-boot:run)
+
+	SpringBootApplication
+		enables:
+			Auto configuration
+				@EnableAutoConfiguration - Enables SB's auto-config support
+			component scanning
+				@ComponentScan - Enables componetn scannig of current pkg.  Also recursively scans sub-pkg
+					- SAME AS SPRING BATCH
+			add'l config
+				@Configuration - Able to register extra beans w/ @Bean or import other config classes
+					- SAME AS SPRING BATCH
+
+	SpringApplication
+		Bootstrap your SB application
+
+
+511 -  explorin the SB project structure, PArt 2
+	Best practice -- Place your main app class in the root pkg above your other pkgs
+		common pitfall
+
+	pkg structure
+		Main SB application class - automatically component scans sub-pkg
+
+	Component scanning
+		default scanning is fine if everything is UNDER your top level pkg
+		Other pkg?
+			explicity state pkg
+				@SpringBootApplication(
+					scanBasePackages={"org.acme.iot.utils", "edu.tst.me"})
+				public class myApplication {
+					...
+				}
+				Could be error prone
+	Application Properties
+		by default, SB will load properties from: application.properties
+			- created by spring initialzr
+			- can added server.port=8585
+			- add custom properties
+				coach.name=Mickey Mouse
+		how to read from:
+			by use of injection
+				@Value("$coach.name")
+				private String coachName
+	/static directory
+		by default SB will load resources in here automatically
+			ex - HTML files, CSS, JS
+	
+	WARNING - DO NOT USE src/min/webapp if your application is pkg as a jar
+			only works with WAR
+
+	Unit Tests
+
+512 - SB starter - curated list of dep
+	collection of dep grouped together
+	tested and verified by spring dev teams
+	easier to get started
+	reduce amt of mvn config
+
+	instead of all the MVC can use spring-boot-starter-web
+		everything in spring-boot-starter-web is compatible, you dont need to test it all
+
+	in the initialzr - in dependency section, adding web, jpa, etc will automatically be in the pom	
+
+	30+ SB starter
+		spring-boot-starter-web
+			building web apps, including validation, REST, (TC as default)
+		spring-boot-starter-security
+			add spring security
+		spring-boot-starter-data-jpa
+			db support w/ jpa and hibernate
+
+	what is a starter?
+		- www.luv2code.com/spring-boot-starters
+		- use IDE to view the feature -- expand them out
+
+513 - SB - parents for SB starter
+	Parent is included in the initialzr
+		has default compiler (currently java 8)
+		utf-8 
+		others
+
+	to override a default, set a property
+		<properties>
+			<java.version>10</java.version>
+		</properties>
+	If you use the parent, you declare the parent version and then there is no need to declare a version on other dep, they are inherited from the parent
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.1.0.RELEASE</version>
+		<relativePath/>
+	<parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+	</dependencies>
+
+	NO NEED TO LIST VERSION... IT IS FROM THE PARENT
+		GREAT FOR MAINTENANCE
+
+
+514 - SB dev tools
+	spring-boot-devtools
+		auto restarts when code is updated
+		more detail - luv2code.com/devtools-docs
+
+	step-by-step
+		1) edit pom.xml and add spring-boot-devtools
+		2) add new REST endpoint to our app
+		3) verify app is auto reload
+			watch console log
+
+	create new endpoint
+		in the RestController add:
+			@GetMapping("/workout")
+			public String getDailyWorkout() {
+				return "Run a hard 5k!";
+			}
+
+515 - SB Actuator - overview
+	montior and manage my app?
+	check app health?
+	access app metrics ?
+
+	add a new dependency
+		spring-boot-starter-actuator
+			automatically exposes endpoints for metrics out of the box
+			endpoint are prefixed with: /actuator
+				/health - health of app
+				/info  - info about project
+					 default = empty
+					 	update application.properties
+					 		ex
+					 			info.app.name=testing
+					 			info.app.description=some app
+					 			info.app.version=1.0.0
+					 		key off 'info.' for /info endpoint
+				/auditevents - audit events of app
+				/beans - list of all beans registered
+					localhost:8080/actuator/beans
+				/mappings - list of all @RequestMappings
+
+				others @: luv2code.com/acutator-endpoints
+			default only /health and /info are expose
+				expose all: in application.properties
+					management.endpoints.web.exposure.include=*
+						need to be aware that you will expose EVERYTHING... security around this later
+
+
+516 - SB - SB actuator - accessing acuator
